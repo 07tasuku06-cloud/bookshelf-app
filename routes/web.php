@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [BookController::class, 'index'])->name('home');
 Route::get('/books', [BookController::class, 'index'])->name('books.index');
 
-// ログイン必須
+// ログイン必須ルート
 Route::middleware('auth')->group(function () {
     Route::resource('genres', GenreController::class);
     Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
@@ -24,5 +24,6 @@ Route::middleware('auth')->group(function () {
 // 動的URLはcreateより後に書く
 Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');
 
+// ranking表示用
 Route::get('/ranking', [RankingController::class, 'index'])
     ->name('ranking.index');
