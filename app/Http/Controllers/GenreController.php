@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreGenreRequest;
+use App\Http\Requests\UpdateGenreRequest;
 use App\Models\Genre;
-use Illuminate\Validation\Rule;
+
 
 class GenreController extends Controller
 {
@@ -31,11 +32,9 @@ class GenreController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreGenreRequest $request)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:genres,name'],
-        ]);
+        $validated = $request->validated();
 
         Genre::create($validated);
 
@@ -65,16 +64,9 @@ class GenreController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Genre $genre)
+    public function update(UpdateGenreRequest $request, Genre $genre)
     {
-        $validated = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('genres', 'name')->ignore($genre->id),
-            ],
-        ]);
+        $validated = $request->validated();
 
         $genre->update($validated);
 
