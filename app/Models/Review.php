@@ -30,7 +30,7 @@ class Review extends Model
         return $this->belongsTo(Book::class);
     }
 
-    public function likedUsers()
+    public function likedByUsers()
     {
         return $this->belongsToMany(User::class, 'review_likes')
             ->withTimestamps();
