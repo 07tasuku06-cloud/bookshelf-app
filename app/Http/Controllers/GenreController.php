@@ -6,7 +6,6 @@ use App\Http\Requests\StoreGenreRequest;
 use App\Http\Requests\UpdateGenreRequest;
 use App\Models\Genre;
 
-
 class GenreController extends Controller
 {
     /**
@@ -48,7 +47,7 @@ class GenreController extends Controller
     {
         $books = $genre->books()
             ->with('genres')
-            ->paginate(12);
+            ->paginate(10);
 
         return view('genres.show', compact('genre', 'books'));
     }
@@ -78,6 +77,15 @@ class GenreController extends Controller
      */
     public function destroy(Genre $genre)
     {
+        if ($genre->books()->exists()) {
+            return redirect()
+                ->route('genres.index')
+                ->with(
+                    'error',
+                    '書籍が紐付いているジャンルは削除できません。'
+                );
+        }
+
         $genre->delete();
 
         return redirect()->route('genres.index');
