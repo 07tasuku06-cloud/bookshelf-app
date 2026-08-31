@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Book;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class BookPolicy
 {
@@ -44,6 +43,7 @@ class BookPolicy
     {
         return $user->id === $book->user_id;
     }
+
     /**
      * Determine whether the user can restore the model.
      */
