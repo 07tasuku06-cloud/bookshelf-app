@@ -174,7 +174,7 @@ class RankingTest extends TestCase
                 'user_id' => $owner->id,
                 'title' => "テスト書籍{$number}",
                 'author' => 'テスト著者',
-                'isbn' => '9780000000' . str_pad(
+                'isbn' => '9780000000'.str_pad(
                     (string) $number,
                     3,
                     '0',

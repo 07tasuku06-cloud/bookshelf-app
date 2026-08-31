@@ -50,5 +50,4 @@ class ReviewController extends Controller
 
         return redirect()->route('books.show', $bookId);
     }
-
 }

@@ -49,7 +49,7 @@ class ReviewSeeder extends Seeder
                     'user_id' => $user->id,
                     'book_id' => $book->id,
                     'rating' => $rating,
-                    'comment' => '「' . $book->title . '」は' . $comments[$rating],
+                    'comment' => '「'.$book->title.'」は'.$comments[$rating],
                 ]);
             }
         }

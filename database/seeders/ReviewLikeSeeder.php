@@ -31,7 +31,7 @@ class ReviewLikeSeeder extends Seeder
                 $userIds[] = $eligibleUsers[$userIndex]->id;
             }
 
-            $review->likedUsers()->syncWithoutDetaching($userIds);
+            $review->likedByUsers()->syncWithoutDetaching($userIds);
         }
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class StoreReviewRequest extends FormRequest
 {
@@ -17,6 +18,29 @@ class StoreReviewRequest extends FormRequest
             'rating' => ['required', 'integer', 'between:1,5'],
             'comment' => ['required', 'string', 'max:1000'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            $user = $this->user();
+            $book = $this->route('book');
+
+            if ($user === null || $book === null) {
+                return;
+            }
+
+            $alreadyReviewed = $user->reviews()
+                ->where('book_id', $book->id)
+                ->exists();
+
+            if ($alreadyReviewed) {
+                $validator->errors()->add(
+                    'comment',
+                    'この書籍にはすでにレビューを投稿しています。'
+                );
+            }
+        });
     }
 
     public function messages(): array
