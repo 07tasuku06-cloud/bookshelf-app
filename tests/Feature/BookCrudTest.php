@@ -557,6 +557,7 @@ class BookCrudTest extends TestCase
         $response->assertSee('編集画面テスト書籍');
         $response->assertSee('編集画面テスト著者');
         $response->assertSee('9781234567901');
+        $response->assertSee('value="2026-08-25"', false);
     }
 
     public function test_book_index_is_paginated_by_ten_in_latest_order_with_genres(): void
