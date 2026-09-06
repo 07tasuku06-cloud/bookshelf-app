@@ -2,24 +2,73 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SearchBookRequest;
 use App\Http\Requests\StoreBookRequest;
 use App\Http\Requests\UpdateBookRequest;
 use App\Models\Book;
 use App\Models\Genre;
+use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 
 class BookController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * 検索条件に応じた書籍一覧を表示する。
      */
-    public function index()
+    public function index(SearchBookRequest $request): View
     {
-        $books = Book::with('genres')
-            ->withAvg('reviews', 'rating')
-            ->latest()
-            ->paginate(10);
+        $validated = $request->validated();
 
-        return view('books.index', compact('books'));
+        $keyword = trim((string) ($validated['keyword'] ?? ''));
+        $genreId = isset($validated['genre'])
+            ? (int) $validated['genre']
+            : null;
+        $sort = $validated['sort'] ?? 'newest';
+
+        $query = Book::query()
+            ->with('genres')
+            ->withAvg('reviews', 'rating')
+            ->when(
+                $keyword !== '',
+                function (Builder $query) use ($keyword): void {
+                    $query->where(
+                        function (Builder $query) use ($keyword): void {
+                            $query->where('title', 'like', "%{$keyword}%")
+                                ->orWhere('author', 'like', "%{$keyword}%");
+                        }
+                    );
+                }
+            )
+            ->when(
+                $genreId !== null,
+                function (Builder $query) use ($genreId): void {
+                    $query->whereHas(
+                        'genres',
+                        function (Builder $query) use ($genreId): void {
+                            $query->where('genres.id', $genreId);
+                        }
+                    );
+                }
+            );
+
+        match ($sort) {
+            'oldest' => $query->oldest(),
+            'rating' => $query
+                ->orderByDesc('reviews_avg_rating')
+                ->orderByDesc('id'),
+            'title' => $query
+                ->orderBy('title')
+                ->orderBy('id'),
+            default => $query->latest(),
+        };
+
+        $books = $query
+            ->paginate(10)
+            ->withQueryString();
+
+        $genres = Genre::orderBy('name')->get();
+
+        return view('books.index', compact('books', 'genres'));
     }
 
     /**
