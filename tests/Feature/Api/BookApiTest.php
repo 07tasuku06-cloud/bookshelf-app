@@ -234,6 +234,35 @@ class BookApiTest extends TestCase
         }
     }
 
+    public function test_store_allows_missing_isbn_and_published_date(): void
+    {
+        $owner = User::factory()->create();
+
+        $genre = Genre::create([
+            'name' => 'API任意項目テスト',
+        ]);
+
+        $response = $this->postJson('/api/v1/books', [
+            'user_id' => $owner->id,
+            'title' => 'API任意項目なしの書籍',
+            'author' => 'API著者',
+            'description' => null,
+            'image_url' => null,
+            'genres' => [$genre->id],
+        ]);
+
+        $response->assertStatus(201);
+        $response->assertJsonPath('data.isbn', null);
+        $response->assertJsonPath('data.published_date', null);
+
+        $this->assertDatabaseHas('books', [
+            'id' => $response->json('data.id'),
+            'user_id' => $owner->id,
+            'isbn' => null,
+            'published_date' => null,
+        ]);
+    }
+
     public function test_update_allows_current_isbn_and_syncs_genres(): void
     {
         $owner = User::factory()->create();
@@ -287,6 +316,42 @@ class BookApiTest extends TestCase
         $this->assertDatabaseHas('book_genre', [
             'book_id' => $book->id,
             'genre_id' => $newGenre->id,
+        ]);
+    }
+
+    public function test_update_allows_null_isbn_and_published_date(): void
+    {
+        $owner = User::factory()->create();
+
+        $genre = Genre::create([
+            'name' => 'API NULL更新テスト',
+        ]);
+
+        $book = $this->createBook($owner);
+
+        $response = $this->putJson(
+            "/api/v1/books/{$book->id}",
+            [
+                'user_id' => $owner->id,
+                'title' => 'API任意項目なしへ更新',
+                'author' => 'API更新著者',
+                'isbn' => null,
+                'published_date' => null,
+                'description' => null,
+                'image_url' => null,
+                'genres' => [$genre->id],
+            ]
+        );
+
+        $response->assertOk();
+        $response->assertJsonPath('data.isbn', null);
+        $response->assertJsonPath('data.published_date', null);
+
+        $this->assertDatabaseHas('books', [
+            'id' => $book->id,
+            'title' => 'API任意項目なしへ更新',
+            'isbn' => null,
+            'published_date' => null,
         ]);
     }
 

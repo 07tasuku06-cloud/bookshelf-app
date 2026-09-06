@@ -62,6 +62,38 @@ class BookCrudTest extends TestCase
         ]);
     }
 
+    public function test_authenticated_user_can_create_book_without_isbn_and_published_date(): void
+    {
+        $user = User::factory()->create();
+
+        $genre = Genre::create([
+            'name' => '任意項目テスト',
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->post(route('books.store'), [
+                'title' => '任意項目なしの書籍',
+                'author' => 'テスト著者',
+                'isbn' => null,
+                'published_date' => null,
+                'description' => null,
+                'image_url' => null,
+                'genres' => [$genre->id],
+            ]);
+
+        $book = Book::where('title', '任意項目なしの書籍')->firstOrFail();
+
+        $response->assertRedirect(route('books.show', $book));
+
+        $this->assertDatabaseHas('books', [
+            'id' => $book->id,
+            'user_id' => $user->id,
+            'isbn' => null,
+            'published_date' => null,
+        ]);
+    }
+
     public function test_book_creation_returns_japanese_validation_messages(): void
     {
         $user = User::factory()->create();
@@ -148,6 +180,48 @@ class BookCrudTest extends TestCase
         $this->assertDatabaseHas('book_genre', [
             'book_id' => $book->id,
             'genre_id' => $newGenre->id,
+        ]);
+    }
+
+    public function test_owner_can_update_book_without_isbn_and_published_date(): void
+    {
+        $owner = User::factory()->create();
+
+        $genre = Genre::create([
+            'name' => 'NULL更新テスト',
+        ]);
+
+        $book = Book::create([
+            'user_id' => $owner->id,
+            'title' => '更新前タイトル',
+            'author' => '更新前著者',
+            'isbn' => '9781234567899',
+            'published_date' => '2026-08-24',
+            'description' => null,
+            'image_url' => null,
+        ]);
+
+        $book->genres()->attach($genre->id);
+
+        $response = $this
+            ->actingAs($owner)
+            ->put(route('books.update', $book), [
+                'title' => '任意項目なしへ更新',
+                'author' => '更新後著者',
+                'isbn' => null,
+                'published_date' => null,
+                'description' => null,
+                'image_url' => null,
+                'genres' => [$genre->id],
+            ]);
+
+        $response->assertRedirect(route('books.show', $book));
+
+        $this->assertDatabaseHas('books', [
+            'id' => $book->id,
+            'title' => '任意項目なしへ更新',
+            'isbn' => null,
+            'published_date' => null,
         ]);
     }
 

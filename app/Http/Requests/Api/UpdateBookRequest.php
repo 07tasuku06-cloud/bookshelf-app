@@ -19,14 +19,14 @@ class UpdateBookRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
             'author' => ['required', 'string', 'max:255'],
             'isbn' => [
-                'required',
+                'nullable',
                 'digits:13',
 
                 // 更新対象の書籍自身をISBNの重複チェックから除外する
                 Rule::unique('books', 'isbn')
                     ->ignore($this->route('book')),
             ],
-            'published_date' => ['required', 'date'],
+            'published_date' => ['nullable', 'date'],
             'description' => ['nullable', 'string'],
             'image_url' => ['nullable', 'url', 'max:2048'],
             'genres' => ['required', 'array', 'min:1'],
