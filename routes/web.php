@@ -4,6 +4,7 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\RankingController;
+use App\Http\Controllers\ReadingPlanController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ReviewLikeController;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +37,15 @@ Route::middleware('auth')->group(function () {
 
     // レビューいいね機能
     Route::post('/reviews/{review}/like', [ReviewLikeController::class, 'toggle'])->name('reviews.like');
+
+    // 読書計画CRUD・読了処理
+    Route::post(
+        '/reading-plans/{reading_plan}/complete',
+        [ReadingPlanController::class, 'complete']
+    )->name('reading-plans.complete');
+
+    Route::resource('reading-plans', ReadingPlanController::class)
+        ->except(['show']);
 });
 
 // 動的URLはcreateより後に書く
