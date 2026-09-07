@@ -2,13 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\FetchBookByIsbnRequest;
 use App\Http\Requests\SearchBookRequest;
 use App\Http\Requests\StoreBookRequest;
 use App\Http\Requests\UpdateBookRequest;
 use App\Models\Book;
 use App\Models\Genre;
+use App\Services\GoogleBooksService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response;
 
 class BookController extends Controller
 {
@@ -69,6 +76,45 @@ class BookController extends Controller
         $genres = Genre::orderBy('name')->get();
 
         return view('books.index', compact('books', 'genres'));
+    }
+
+    /**
+     * ISBNからGoogle Books APIの書籍情報を取得する。
+     */
+    public function fetchByIsbn(
+        FetchBookByIsbnRequest $request,
+        GoogleBooksService $googleBooksService
+    ): JsonResponse {
+        try {
+            $bookData = $googleBooksService->searchByIsbn(
+                (string) $request->validated('isbn')
+            );
+        } catch (ConnectionException|RequestException $exception) {
+            Log::warning('Google Books APIとの通信に失敗しました。', [
+                'exception' => $exception::class,
+                'status' => $exception instanceof RequestException
+                    ? $exception->response->status()
+                    : null,
+            ]);
+
+            return response()->json(
+                [
+                    'error' => '書籍情報の取得に失敗しました。',
+                ],
+                Response::HTTP_BAD_GATEWAY
+            );
+        }
+
+        if ($bookData === null) {
+            return response()->json(
+                [
+                    'error' => '該当する書籍が見つかりませんでした。',
+                ],
+                Response::HTTP_NOT_FOUND
+            );
+        }
+
+        return response()->json($bookData);
     }
 
     /**

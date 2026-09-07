@@ -18,6 +18,9 @@ Route::middleware('auth')->group(function () {
     // ジャンルCRUD
     Route::resource('genres', GenreController::class);
 
+    // Google Books APIによるISBN検索
+    Route::get('/books/isbn/{isbn}', [BookController::class, 'fetchByIsbn'])->name('books.fetch-by-isbn');
+
     // 書籍CRUD
     Route::get('/books/create', [BookController::class, 'create'])->name('books.create');
     Route::post('/books', [BookController::class, 'store'])->name('books.store');
