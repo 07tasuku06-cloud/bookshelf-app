@@ -3,6 +3,7 @@
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GenreController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RankingController;
 use App\Http\Controllers\ReadingPlanController;
 use App\Http\Controllers\ReviewController;
@@ -49,6 +50,13 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('reading-plans', ReadingPlanController::class)
         ->except(['show']);
+
+    // 通知一覧・既読処理
+    Route::get('/notifications', [NotificationController::class, 'index'])
+        ->name('notifications.index');
+
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'read'])
+        ->name('notifications.read');
 });
 
 // 動的URLはcreateより後に書く
