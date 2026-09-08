@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\Genre;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -114,6 +115,65 @@ class AuthTokenTest extends TestCase
                 'name' => 'postman',
             ]
         );
+    }
+
+    /**
+     * APIで発行したBearerトークンを使って書籍を登録する。
+     */
+    public function test_issued_token_can_access_protected_book_endpoint(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'bearer@example.com',
+            'password' => Hash::make('correct-password'),
+        ]);
+
+        $genre = Genre::create([
+            'name' => 'Bearer認証テスト',
+        ]);
+
+        $tokenResponse = $this->postJson(
+            route('api.v1.tokens.store'),
+            [
+                'email' => 'bearer@example.com',
+                'password' => 'correct-password',
+                'device_name' => 'integration-test',
+            ]
+        );
+
+        $tokenResponse->assertCreated();
+
+        $bookResponse = $this
+            ->withToken(
+                (string) $tokenResponse->json('token')
+            )
+            ->postJson('/api/v1/books', [
+                'title' => 'Bearer認証で登録する書籍',
+                'author' => '認証テスト著者',
+                'isbn' => '9789999999911',
+                'published_date' => '2026-09-08',
+                'description' => '発行したトークンを利用する統合テストです。',
+                'image_url' => null,
+                'genres' => [$genre->id],
+            ]);
+
+        $bookResponse->assertCreated();
+        $bookResponse->assertJsonPath(
+            'data.user_id',
+            $user->id
+        );
+
+        $bookId = $bookResponse->json('data.id');
+
+        $this->assertDatabaseHas('books', [
+            'id' => $bookId,
+            'user_id' => $user->id,
+            'title' => 'Bearer認証で登録する書籍',
+        ]);
+
+        $this->assertDatabaseHas('book_genre', [
+            'book_id' => $bookId,
+            'genre_id' => $genre->id,
+        ]);
     }
 
     /**
