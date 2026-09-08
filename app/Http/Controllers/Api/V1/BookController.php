@@ -7,13 +7,15 @@ use App\Http\Requests\Api\StoreBookRequest;
 use App\Http\Requests\Api\UpdateBookRequest;
 use App\Http\Resources\BookResource;
 use App\Models\Book;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 
 class BookController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): AnonymousResourceCollection
     {
         $validated = $request->validate(
             [
@@ -73,9 +75,11 @@ class BookController extends Controller
         return BookResource::collection($books);
     }
 
-    public function store(StoreBookRequest $request)
+    public function store(StoreBookRequest $request): JsonResponse
     {
         $validated = $request->validated();
+
+        $validated['user_id'] = $request->user()->id;
 
         $book = DB::transaction(function () use ($validated) {
             $genreIds = $validated['genres'];
@@ -98,7 +102,7 @@ class BookController extends Controller
             ->setStatusCode(Response::HTTP_CREATED);
     }
 
-    public function show(Book $book)
+    public function show(Book $book): BookResource
     {
         $book->load([
             'genres',
@@ -119,7 +123,9 @@ class BookController extends Controller
     public function update(
         UpdateBookRequest $request,
         Book $book
-    ) {
+    ): BookResource {
+        $this->authorize('update', $book);
+
         $validated = $request->validated();
 
         DB::transaction(function () use ($validated, $book) {
@@ -139,8 +145,10 @@ class BookController extends Controller
         return new BookResource($book);
     }
 
-    public function destroy(Book $book)
+    public function destroy(Book $book): Response
     {
+        $this->authorize('delete', $book);
+
         $book->delete();
 
         return response()->noContent();
