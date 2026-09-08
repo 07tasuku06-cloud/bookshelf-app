@@ -15,6 +15,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -131,8 +132,9 @@ class BookController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreBookRequest $request): RedirectResponse
-    {
+    public function store(
+        StoreBookRequest $request
+    ): RedirectResponse {
         $validated = $request->validated();
 
         $genreIds = $validated['genres'];
@@ -140,9 +142,15 @@ class BookController extends Controller
 
         $validated['user_id'] = auth()->id();
 
-        $book = Book::create($validated);
+        $book = DB::transaction(
+            function () use ($validated, $genreIds): Book {
+                $book = Book::create($validated);
 
-        $book->genres()->sync($genreIds);
+                $book->genres()->sync($genreIds);
+
+                return $book;
+            }
+        );
 
         return redirect()->route('books.show', $book);
     }
@@ -178,8 +186,10 @@ class BookController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateBookRequest $request, Book $book): RedirectResponse
-    {
+    public function update(
+        UpdateBookRequest $request,
+        Book $book
+    ): RedirectResponse {
         $this->authorize('update', $book);
 
         $validated = $request->validated();
@@ -187,9 +197,13 @@ class BookController extends Controller
         $genreIds = $validated['genres'];
         unset($validated['genres']);
 
-        $book->update($validated);
+        DB::transaction(
+            function () use ($book, $validated, $genreIds): void {
+                $book->update($validated);
 
-        $book->genres()->sync($genreIds);
+                $book->genres()->sync($genreIds);
+            }
+        );
 
         return redirect()->route('books.show', $book);
     }
