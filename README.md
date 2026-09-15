@@ -101,7 +101,7 @@ GOOGLE_BOOKS_API_URL=https://www.googleapis.com/books/v1/volumes
 GOOGLE_BOOKS_API_KEY=
 ```
 
-APIキーを使用する場合は、Git管理されない`.env`の`GOOGLE_BOOKS_API_KEY`へ設定してください。空の場合はAPIキーなしでリクエストします。
+Google Books APIを利用するにはAPIキーを発行し、Git管理されない`.env`の`GOOGLE_BOOKS_API_KEY`へ設定してください。実際のAPIキーは`.env.example`やGitHubへ登録しないでください。
 
 ### 4. Sailを起動
 
