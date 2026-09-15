@@ -13,6 +13,9 @@ class ReadingPlanReminder extends Notification
 
     /**
      * 通知対象の読書計画と通知タイミングを受け取る。
+     *
+     * @param  ReadingPlan  $readingPlan  通知対象の読書計画
+     * @param  ReadingPlanReminderTiming  $timing  通知するタイミング
      */
     public function __construct(
         private readonly ReadingPlan $readingPlan,
@@ -22,7 +25,8 @@ class ReadingPlanReminder extends Notification
     /**
      * 通知をデータベースへ保存する。
      *
-     * @return array<int, string>
+     * @param  object  $notifiable  通知を受け取るユーザー
+     * @return array<int, string> 使用する通知チャンネル
      */
     public function via(object $notifiable): array
     {
@@ -32,7 +36,8 @@ class ReadingPlanReminder extends Notification
     /**
      * データベースへ保存する通知内容を返す。
      *
-     * @return array<string, int|string|null>
+     * @param  object  $notifiable  通知を受け取るユーザー
+     * @return array<string, int|string|null> データベースへ保存する通知データ
      */
     public function toDatabase(object $notifiable): array
     {

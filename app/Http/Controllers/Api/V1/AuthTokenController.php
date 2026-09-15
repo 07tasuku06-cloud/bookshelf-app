@@ -16,7 +16,10 @@ class AuthTokenController extends Controller
     /**
      * メールアドレスとパスワードを確認してAPIトークンを発行する。
      *
-     * @throws ValidationException
+     * @param  StoreApiTokenRequest  $request  検証済み認証情報とデバイス名
+     * @return JsonResponse 発行したトークン情報を含む201レスポンス
+     *
+     * @throws ValidationException 認証情報が正しくない場合
      */
     public function store(
         StoreApiTokenRequest $request
@@ -57,6 +60,9 @@ class AuthTokenController extends Controller
 
     /**
      * 現在のリクエストで使用したAPIトークンを失効させる。
+     *
+     * @param  Request  $request  Sanctumで認証されたリクエスト
+     * @return Response 本文を持たない204レスポンス
      */
     public function destroy(Request $request): Response
     {

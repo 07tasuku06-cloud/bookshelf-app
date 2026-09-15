@@ -22,7 +22,10 @@ use Symfony\Component\HttpFoundation\Response;
 class BookController extends Controller
 {
     /**
-     * 検索条件に応じた書籍一覧を表示する。
+     * 検索・ジャンル・並び順の条件に応じた書籍一覧を表示する。
+     *
+     * @param  SearchBookRequest  $request  検証済み検索条件
+     * @return View 書籍一覧画面
      */
     public function index(SearchBookRequest $request): View
     {
@@ -81,7 +84,11 @@ class BookController extends Controller
     }
 
     /**
-     * ISBNからGoogle Books APIの書籍情報を取得する。
+     * ISBNを使ってGoogle Books APIから書籍情報を取得する。
+     *
+     * @param  FetchBookByIsbnRequest  $request  検証済みISBN
+     * @param  GoogleBooksService  $googleBooksService  書籍情報取得サービス
+     * @return JsonResponse 取得した書籍情報またはエラー情報
      */
     public function fetchByIsbn(
         FetchBookByIsbnRequest $request,
@@ -120,7 +127,9 @@ class BookController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * 書籍登録画面を表示する。
+     *
+     * @return View 書籍登録画面
      */
     public function create(): View
     {
@@ -130,7 +139,10 @@ class BookController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * 認証ユーザーの書籍とジャンル情報を登録する。
+     *
+     * @param  StoreBookRequest  $request  検証済み書籍情報
+     * @return RedirectResponse 書籍詳細画面へのリダイレクト
      */
     public function store(
         StoreBookRequest $request
@@ -156,7 +168,10 @@ class BookController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * 指定された書籍とジャンル・レビュー情報を表示する。
+     *
+     * @param  Book  $book  表示対象の書籍
+     * @return View 書籍詳細画面
      */
     public function show(Book $book): View
     {
@@ -170,7 +185,10 @@ class BookController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * 所有者に指定された書籍の編集画面を表示する。
+     *
+     * @param  Book  $book  編集対象の書籍
+     * @return View 書籍編集画面
      */
     public function edit(Book $book): View
     {
@@ -184,7 +202,11 @@ class BookController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * 所有者の書籍とジャンル情報を更新する。
+     *
+     * @param  UpdateBookRequest  $request  検証済み書籍情報
+     * @param  Book  $book  更新対象の書籍
+     * @return RedirectResponse 書籍詳細画面へのリダイレクト
      */
     public function update(
         UpdateBookRequest $request,
@@ -209,7 +231,10 @@ class BookController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * 所有者の書籍を削除する。
+     *
+     * @param  Book  $book  削除対象の書籍
+     * @return RedirectResponse 書籍一覧画面へのリダイレクト
      */
     public function destroy(Book $book): RedirectResponse
     {

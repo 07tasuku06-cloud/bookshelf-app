@@ -29,6 +29,8 @@ class ProcessReadingPlanReminders extends Command
 
     /**
      * 期限超過状態の更新とリマインダー送信を実行する。
+     *
+     * @return int Artisanコマンドの終了コード
      */
     public function handle(): int
     {
@@ -85,6 +87,10 @@ class ProcessReadingPlanReminders extends Command
 
     /**
      * 1件の読書計画を排他制御し、未送信の場合だけ通知する。
+     *
+     * @param  int  $readingPlanId  処理対象の読書計画ID
+     * @param  CarbonImmutable  $today  判定基準日
+     * @return int 送信した通知数。未送信の場合は0
      */
     private function processReminder(
         int $readingPlanId,
@@ -134,6 +140,10 @@ class ProcessReadingPlanReminders extends Command
 
     /**
      * 読書計画の状態と期日から通知タイミングを決定する。
+     *
+     * @param  ReadingPlan  $readingPlan  判定対象の読書計画
+     * @param  CarbonImmutable  $today  判定基準日
+     * @return ReadingPlanReminderTiming|null 通知タイミング。対象外の場合はnull
      */
     private function determineTiming(
         ReadingPlan $readingPlan,
@@ -163,6 +173,10 @@ class ProcessReadingPlanReminders extends Command
 
     /**
      * 同じ読書計画・通知タイミングの通知が送信済みか確認する。
+     *
+     * @param  ReadingPlan  $readingPlan  確認対象の読書計画
+     * @param  ReadingPlanReminderTiming  $timing  確認対象の通知タイミング
+     * @return bool 送信済みの場合はtrue
      */
     private function reminderAlreadyExists(
         ReadingPlan $readingPlan,

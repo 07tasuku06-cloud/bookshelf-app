@@ -14,6 +14,9 @@ class ReportController extends Controller
 {
     /**
      * ログインユーザーの読書レポートを表示する。
+     *
+     * @param  Request  $request  認証済みユーザーを含むリクエスト
+     * @return View 読書レポート画面
      */
     public function index(Request $request): View
     {
@@ -52,8 +55,8 @@ class ReportController extends Controller
     /**
      * 評価1から5までのレビュー件数を作成する。
      *
-     * @param  Collection<int, Review>  $reviews
-     * @return Collection<int, int>
+     * @param  Collection<int, Review>  $reviews  集計対象のレビュー一覧
+     * @return Collection<int, int> 評価1から5までのレビュー件数
      */
     private function buildRatingDistribution(
         Collection $reviews
@@ -69,8 +72,8 @@ class ReportController extends Controller
     /**
      * 評価4以上の書籍を評価順で最大5冊取得する。
      *
-     * @param  Collection<int, Review>  $reviews
-     * @return Collection<int, array<string, int|string>>
+     * @param  Collection<int, Review>  $reviews  集計対象のレビュー一覧
+     * @return Collection<int, array<string, int|string>> 高評価書籍の一覧
      */
     private function buildTopRatedBooks(
         Collection $reviews
@@ -99,8 +102,8 @@ class ReportController extends Controller
     /**
      * ジャンル別の平均評価とレビュー件数を最大5件作成する。
      *
-     * @param  Collection<int, Review>  $reviews
-     * @return Collection<int, array<string, float|int|string>>
+     * @param  Collection<int, Review>  $reviews  集計対象のレビュー一覧
+     * @return Collection<int, array<string, float|int|string>> ジャンル別の評価集計
      */
     private function buildGenreRatings(
         Collection $reviews

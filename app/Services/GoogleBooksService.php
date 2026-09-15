@@ -9,13 +9,14 @@ class GoogleBooksService
     /**
      * ISBNを使ってGoogle Books APIから書籍情報を取得する。
      *
+     * @param  string  $isbn  検索対象の13桁ISBN
      * @return array{
      *     title: string,
      *     author: string,
      *     published_date: string|null,
      *     description: string|null,
      *     image_url: string|null
-     * }|null
+     * }|null 取得した書籍情報。見つからない場合はnull
      */
     public function searchByIsbn(string $isbn): ?array
     {
@@ -73,6 +74,9 @@ class GoogleBooksService
 
     /**
      * Google Booksの出版日をHTMLの日付入力形式へ統一する。
+     *
+     * @param  mixed  $publishedDate  Google Books APIから取得した出版日
+     * @return string|null YYYY-MM-DD形式の日付。変換できない場合はnull
      */
     private function normalizePublishedDate(mixed $publishedDate): ?string
     {
@@ -90,6 +94,9 @@ class GoogleBooksService
 
     /**
      * Google Booksの画像URLをHTTPSへ統一する。
+     *
+     * @param  mixed  $imageUrl  Google Books APIから取得した画像URL
+     * @return string|null HTTPS形式の画像URL。使用できない場合はnull
      */
     private function normalizeImageUrl(mixed $imageUrl): ?string
     {

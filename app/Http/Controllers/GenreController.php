@@ -11,7 +11,9 @@ use Illuminate\View\View;
 class GenreController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * 書籍数を含むジャンル一覧を名前順で表示する。
+     *
+     * @return View ジャンル一覧画面
      */
     public function index(): View
     {
@@ -23,7 +25,9 @@ class GenreController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * ジャンル登録画面を表示する。
+     *
+     * @return View ジャンル登録画面
      */
     public function create(): View
     {
@@ -31,7 +35,10 @@ class GenreController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * 新しいジャンルを登録する。
+     *
+     * @param  StoreGenreRequest  $request  検証済みジャンル情報
+     * @return RedirectResponse ジャンル一覧画面へのリダイレクト
      */
     public function store(StoreGenreRequest $request): RedirectResponse
     {
@@ -43,7 +50,10 @@ class GenreController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * 指定されたジャンルと、そのジャンルに属する書籍を表示する。
+     *
+     * @param  Genre  $genre  表示対象のジャンル
+     * @return View ジャンル詳細画面
      */
     public function show(Genre $genre): View
     {
@@ -55,7 +65,10 @@ class GenreController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * 指定されたジャンルの編集画面を表示する。
+     *
+     * @param  Genre  $genre  編集対象のジャンル
+     * @return View ジャンル編集画面
      */
     public function edit(Genre $genre): View
     {
@@ -63,7 +76,11 @@ class GenreController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * 指定されたジャンルを更新する。
+     *
+     * @param  UpdateGenreRequest  $request  検証済みジャンル情報
+     * @param  Genre  $genre  更新対象のジャンル
+     * @return RedirectResponse ジャンル一覧画面へのリダイレクト
      */
     public function update(UpdateGenreRequest $request, Genre $genre): RedirectResponse
     {
@@ -75,7 +92,10 @@ class GenreController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * 書籍が紐付いていないジャンルを削除する。
+     *
+     * @param  Genre  $genre  削除対象のジャンル
+     * @return RedirectResponse ジャンル一覧画面へのリダイレクト
      */
     public function destroy(Genre $genre): RedirectResponse
     {

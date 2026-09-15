@@ -10,6 +10,9 @@ class NotificationController extends Controller
 {
     /**
      * ログインユーザーの通知一覧を表示する。
+     *
+     * @param  Request  $request  認証済みユーザーを含むリクエスト
+     * @return View 通知一覧画面
      */
     public function index(Request $request): View
     {
@@ -26,6 +29,10 @@ class NotificationController extends Controller
 
     /**
      * ログインユーザーが所有する通知を既読にする。
+     *
+     * @param  Request  $request  認証済みユーザーを含むリクエスト
+     * @param  string  $notification  既読にする通知のID
+     * @return RedirectResponse 直前の画面へのリダイレクト
      */
     public function read(
         Request $request,
