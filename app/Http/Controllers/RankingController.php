@@ -3,10 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
+use Illuminate\View\View;
 
 class RankingController extends Controller
 {
-    public function index()
+    /**
+     * レビューの平均評価に基づく書籍ランキングを表示する。
+     *
+     * @return View 書籍ランキング画面
+     */
+    public function index(): View
     {
         $rankedBooks = Book::withAvg('reviews', 'rating')
             ->withCount('reviews')
@@ -19,5 +25,4 @@ class RankingController extends Controller
 
         return view('ranking.index', compact('rankedBooks'));
     }
-    //
 }

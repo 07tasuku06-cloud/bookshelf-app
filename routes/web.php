@@ -3,7 +3,10 @@
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GenreController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RankingController;
+use App\Http\Controllers\ReadingPlanController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ReviewLikeController;
 use Illuminate\Support\Facades\Route;
@@ -16,6 +19,9 @@ Route::get('/books', [BookController::class, 'index'])->name('books.index');
 Route::middleware('auth')->group(function () {
     // ジャンルCRUD
     Route::resource('genres', GenreController::class);
+
+    // Google Books APIによるISBN検索
+    Route::get('/books/isbn/{isbn}', [BookController::class, 'fetchByIsbn'])->name('books.fetch-by-isbn');
 
     // 書籍CRUD
     Route::get('/books/create', [BookController::class, 'create'])->name('books.create');
@@ -36,6 +42,26 @@ Route::middleware('auth')->group(function () {
 
     // レビューいいね機能
     Route::post('/reviews/{review}/like', [ReviewLikeController::class, 'toggle'])->name('reviews.like');
+
+    // 読書計画CRUD・読了処理
+    Route::post(
+        '/reading-plans/{reading_plan}/complete',
+        [ReadingPlanController::class, 'complete']
+    )->name('reading-plans.complete');
+
+    Route::resource('reading-plans', ReadingPlanController::class)
+        ->except(['show']);
+
+    // 通知一覧・既読処理
+    Route::get('/notifications', [NotificationController::class, 'index'])
+        ->name('notifications.index');
+
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'read'])
+        ->name('notifications.read');
+
+    // マイ読書レポート
+    Route::get('/reports', [ReportController::class, 'index'])
+        ->name('reports.index');
 });
 
 // 動的URLはcreateより後に書く

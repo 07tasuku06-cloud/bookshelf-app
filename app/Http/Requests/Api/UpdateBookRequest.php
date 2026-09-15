@@ -15,18 +15,17 @@ class UpdateBookRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => ['required', 'integer', 'exists:users,id'],
             'title' => ['required', 'string', 'max:255'],
             'author' => ['required', 'string', 'max:255'],
             'isbn' => [
-                'required',
+                'nullable',
                 'digits:13',
 
                 // 更新対象の書籍自身をISBNの重複チェックから除外する
                 Rule::unique('books', 'isbn')
                     ->ignore($this->route('book')),
             ],
-            'published_date' => ['required', 'date'],
+            'published_date' => ['nullable', 'date'],
             'description' => ['nullable', 'string'],
             'image_url' => ['nullable', 'url', 'max:2048'],
             'genres' => ['required', 'array', 'min:1'],
@@ -60,7 +59,6 @@ class UpdateBookRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'user_id' => 'ユーザーID',
             'title' => 'タイトル',
             'author' => '著者名',
             'isbn' => 'ISBN',

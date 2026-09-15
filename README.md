@@ -1,20 +1,28 @@
 # BookShelf 書籍レビューアプリ
 
-BookShelfは、書籍の登録・閲覧、レビュー投稿、お気に入り登録、レビューへのいいねなどを管理するLaravel製の書籍レビューアプリです。
+BookShelfは、書籍の登録・閲覧、レビュー、お気に入り、読書計画、リマインダー通知、読書傾向のレポートなどを管理するLaravel製の書籍レビューアプリです。
 
-Webブラウザ向けの画面はBladeとセッション認証で提供し、外部アプリケーション向けには書籍情報を操作できるREST APIを提供します。
+Webブラウザ向けにはBladeとセッション認証による画面を提供し、外部アプリケーション向けには公開参照APIとLaravel SanctumによるBearerトークン認証付き書籍操作APIを提供します。
 
 ## 主な機能
 
 - ユーザー登録・ログイン・ログアウト
 - 書籍の一覧・詳細表示・登録・編集・削除
+- タイトル・著者のキーワード検索
+- ジャンル絞り込み、並び替え、ページネーション
+- Google Books APIを利用したISBNによる書籍情報の自動取得
 - ジャンルの一覧・詳細表示・登録・編集・削除
 - レビューの投稿・編集・削除
 - 書籍のお気に入り登録・解除・一覧表示
 - レビューへのいいね・解除
 - 平均評価・レビュー件数に基づく上位10冊のランキング
-- 検索・ジャンル絞り込み・ページネーションに対応した公開REST API
-- 所有者または投稿者に基づく更新・削除の認可
+- 読書計画の登録・編集・読了・削除・状態別表示
+- 期限3日前・当日・3日後のリマインダー通知
+- 通知一覧表示と既読処理
+- レビュー数・読了冊数・平均評価・評価分布・高評価書籍・ジャンル傾向のレポート
+- 検索・ジャンル絞り込み・ページネーション対応のREST API
+- Laravel SanctumによるAPIトークン発行・失効
+- 書籍、レビュー、読書計画の所有者認可
 
 ## 使用技術
 
@@ -23,6 +31,8 @@ Webブラウザ向けの画面はBladeとセッション認証で提供し、外
 - MySQL 8.4
 - Laravel Sail
 - Laravel Fortify
+- Laravel Sanctum
+- Google Books API
 - Vite 5
 - Tailwind CSS 3
 - Alpine.js
@@ -83,6 +93,15 @@ DB_PASSWORD=password
 ```
 
 `DB_HOST`には`localhost`ではなく、Docker Composeのサービス名である`mysql`を指定します。
+
+Google Books APIを使用するため、次の環境変数も設定します。
+
+```env
+GOOGLE_BOOKS_API_URL=https://www.googleapis.com/books/v1/volumes
+GOOGLE_BOOKS_API_KEY=
+```
+
+APIキーを使用する場合は、Git管理されない`.env`の`GOOGLE_BOOKS_API_KEY`へ設定してください。空の場合はAPIキーなしでリクエストします。
 
 ### 4. Sailを起動
 
@@ -157,32 +176,92 @@ DB_PASSWORD=password
 | メソッド | パス | 内容 | 認証 |
 |---|---|---|---|
 | GET | `/` | 書籍一覧（トップ） | 不要 |
-| GET | `/books` | 書籍一覧 | 不要 |
+| GET | `/books` | 書籍検索・一覧 | 不要 |
 | GET | `/books/{book}` | 書籍詳細 | 不要 |
 | GET | `/ranking` | 書籍ランキング | 不要 |
 | GET / POST | `/register` | 会員登録 | 不要 |
 | GET / POST | `/login` | ログイン | 不要 |
 | POST | `/logout` | ログアウト | 必要 |
 | GET | `/books/create` | 書籍登録画面 | 必要 |
+| GET | `/books/isbn/{isbn}` | Google Books APIによるISBN検索 | 必要 |
 | GET | `/books/{book}/edit` | 書籍編集画面 | 必要 |
 | GET | `/genres` | ジャンル一覧 | 必要 |
 | GET | `/favorites` | お気に入り一覧 | 必要 |
+| GET | `/reading-plans` | 読書計画一覧 | 必要 |
+| GET | `/notifications` | 通知一覧 | 必要 |
+| GET | `/reports` | マイ読書レポート | 必要 |
 
-書籍・レビューの更新および削除は、登録者または投稿者本人に限定しています。
+書籍・レビュー・読書計画の更新および削除は、登録者または投稿者本人に限定しています。
+
+## 読書計画リマインダー
+
+読書計画の期限3日前・当日・3日後にデータベース通知を作成します。また、期限を過ぎた未読了の計画を期限超過状態へ更新します。
+
+コマンドを手動実行する場合：
+
+```bash
+./vendor/bin/sail artisan reading-plans:process-reminders
+```
+
+スケジューラーは`Asia/Tokyo`の毎日9時に実行されます。ローカル環境でスケジューラーを継続実行する場合は、別のターミナルで次を実行します。
+
+```bash
+./vendor/bin/sail artisan schedule:work
+```
+
+本番環境では、Laravelの`php artisan schedule:run`を毎分実行するCron設定が必要です。
 
 ## REST API
 
-ベースURLは`http://localhost/api/v1`です。基本機能では、すべてのAPIを認証なしで利用できます。
+ベースURLは`http://localhost/api/v1`です。
+
+書籍一覧・詳細の取得は認証なしで利用できます。書籍の登録・更新・削除には、Laravel Sanctumで発行したBearerトークンが必要です。
 
 ### エンドポイント
 
-| メソッド | エンドポイント | 内容 | 成功時ステータス |
-|---|---|---|---:|
-| GET | `/api/v1/books` | 書籍一覧の取得 | 200 |
-| GET | `/api/v1/books/{book}` | 書籍詳細の取得 | 200 |
-| POST | `/api/v1/books` | 書籍の新規登録 | 201 |
-| PUT | `/api/v1/books/{book}` | 書籍の更新 | 200 |
-| DELETE | `/api/v1/books/{book}` | 書籍の削除 | 204 |
+| メソッド | エンドポイント | 内容 | 認証 | 成功時 |
+|---|---|---|---|---:|
+| POST | `/api/v1/tokens` | APIトークン発行 | 不要 | 201 |
+| DELETE | `/api/v1/tokens/current` | 現在のトークンを失効 | 必要 | 204 |
+| GET | `/api/v1/books` | 書籍一覧の取得 | 不要 | 200 |
+| GET | `/api/v1/books/{book}` | 書籍詳細の取得 | 不要 | 200 |
+| POST | `/api/v1/books` | 書籍の新規登録 | 必要 | 201 |
+| PUT / PATCH | `/api/v1/books/{book}` | 書籍の更新 | 必要 | 200 |
+| DELETE | `/api/v1/books/{book}` | 書籍の削除 | 必要 | 204 |
+
+### APIトークンの発行
+
+`POST /api/v1/tokens`
+
+```json
+{
+  "email": "yamada@example.com",
+  "password": "password",
+  "device_name": "local-development"
+}
+```
+
+成功時は、次の形式でトークンを返します。
+
+```json
+{
+  "token": "1|発行されたトークン",
+  "token_type": "Bearer"
+}
+```
+
+認証が必要なAPIでは、HTTPヘッダーへトークンを設定します。
+
+```text
+Authorization: Bearer 1|発行されたトークン
+Accept: application/json
+```
+
+現在使用しているトークンを失効させる場合：
+
+```text
+DELETE /api/v1/tokens/current
+```
 
 ### 書籍一覧
 
@@ -215,14 +294,15 @@ GET /api/v1/books?keyword=Laravel&genre_id=3&per_page=10&page=1
 
 | パラメータ | 型 | 必須 | バリデーション |
 |---|---|---|---|
-| `user_id` | integer | 必須 | 存在するユーザーID |
 | `title` | string | 必須 | 最大255文字 |
 | `author` | string | 必須 | 最大255文字 |
-| `isbn` | string | 必須 | 13桁の数字・重複不可 |
-| `published_date` | date | 必須 | 有効な日付 |
+| `isbn` | string | 任意 | 13桁の数字・重複不可 |
+| `published_date` | date | 任意 | 有効な日付 |
 | `description` | string | 任意 | 書籍の説明 |
 | `image_url` | string | 任意 | URL形式・最大2048文字 |
 | `genres` | array | 必須 | 存在するジャンルIDを1件以上・重複不可 |
+
+`user_id`はリクエストでは受け取りません。Sanctumで認証されたユーザーのIDを、サーバー側で登録者として設定します。
 
 更新時のISBN重複チェックでは、更新対象の書籍自身を除外します。
 
@@ -230,7 +310,6 @@ GET /api/v1/books?keyword=Laravel&genre_id=3&per_page=10&page=1
 
 ```json
 {
-  "user_id": 1,
   "title": "Laravel入門",
   "author": "山田太郎",
   "isbn": "9781234567890",
@@ -254,25 +333,16 @@ GET /api/v1/books?keyword=Laravel&genre_id=3&per_page=10&page=1
     "published_date": "2026-08-31",
     "description": "Laravelを基礎から学ぶ書籍です。",
     "image_url": "https://example.com/book.jpg",
-    "genres": [
-      {
-        "id": 1,
-        "name": "技術書"
-      }
-    ],
+    "genres": [],
     "average_rating": 4.5,
-    "reviews_count": 2,
-    "created_at": "2026-08-31T00:00:00.000000Z",
-    "updated_at": "2026-08-31T00:00:00.000000Z"
+    "reviews_count": 2
   }
 }
 ```
 
-書籍詳細APIでは、`data`内に`reviews`が追加されます。一覧APIでは、`data`が配列になり、`links`と`meta`が追加されます。
-
 ### エラーレスポンス
 
-存在しない書籍IDを指定した場合は、404を返します。
+存在しない書籍IDを指定した場合は404を返します。
 
 ```json
 {
@@ -280,18 +350,7 @@ GET /api/v1/books?keyword=Laravel&genre_id=3&per_page=10&page=1
 }
 ```
 
-入力値がバリデーションを通過しなかった場合は、422と日本語のエラーメッセージを返します。
-
-```json
-{
-  "message": "タイトルを入力してください。",
-  "errors": {
-    "title": [
-      "タイトルを入力してください。"
-    ]
-  }
-}
-```
+入力値がバリデーションを通過しなかった場合は422と日本語のエラーメッセージを返します。
 
 ## テスト・コードスタイル
 
@@ -304,23 +363,36 @@ GET /api/v1/books?keyword=Laravel&genre_id=3&per_page=10&page=1
 ### 全自動テスト
 
 ```bash
-./vendor/bin/sail artisan test
+./vendor/bin/sail test
 ```
 
 ### コードカバレッジ
 
 ```bash
-./vendor/bin/sail artisan test --coverage
+./vendor/bin/sail test --coverage
 ```
 
-2026年8月31日時点の結果：
+2026年9月15日時点の結果：
 
 ```text
-Tests:    83 passed (403 assertions)
-Coverage: 90.5%
+Tests:    135 passed (622 assertions)
+Coverage: 95.1%
 ```
 
-テストでは、Modelのリレーションとキャスト、画面アクセス、認証、Web CRUD、認可、お気に入り、レビューいいね、ランキング、公開APIを検証しています。
+テストでは、次の機能を検証しています。
+
+- Modelのリレーションとキャスト
+- Web画面と認証
+- 書籍・ジャンル・レビューのCRUD
+- 所有者・投稿者に基づく認可
+- お気に入りとレビューいいね
+- ランキングと高度な書籍検索
+- Google Books API連携
+- 読書計画とリマインダー
+- 通知一覧と既読処理
+- マイ読書レポート
+- REST API
+- SanctumによるBearerトークン認証
 
 ## ER図
 
@@ -342,8 +414,8 @@ erDiagram
         bigint user_id FK
         varchar title
         varchar author
-        varchar isbn UK
-        date published_date
+        varchar isbn UK "nullable"
+        date published_date "nullable"
         text description
         varchar image_url
         timestamp created_at
@@ -391,6 +463,41 @@ erDiagram
         timestamp updated_at
     }
 
+    READING_PLANS {
+        bigint id PK
+        bigint user_id FK
+        bigint book_id FK
+        date target_date
+        varchar status
+        timestamp completed_at "nullable"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    NOTIFICATIONS {
+        uuid id PK
+        varchar type
+        varchar notifiable_type
+        bigint notifiable_id
+        text data
+        timestamp read_at "nullable"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    PERSONAL_ACCESS_TOKENS {
+        bigint id PK
+        varchar tokenable_type
+        bigint tokenable_id
+        varchar name
+        varchar token UK
+        text abilities "nullable"
+        timestamp last_used_at "nullable"
+        timestamp expires_at "nullable"
+        timestamp created_at
+        timestamp updated_at
+    }
+
     USERS ||--o{ BOOKS : registers
     USERS ||--o{ REVIEWS : posts
     BOOKS ||--o{ REVIEWS : receives
@@ -400,7 +507,13 @@ erDiagram
     BOOKS ||--o{ FAVORITES : receives
     USERS ||--o{ REVIEW_LIKES : adds
     REVIEWS ||--o{ REVIEW_LIKES : receives
+    USERS ||--o{ READING_PLANS : creates
+    BOOKS ||--o{ READING_PLANS : planned
+    USERS ||--o{ NOTIFICATIONS : receives
+    USERS ||--o{ PERSONAL_ACCESS_TOKENS : owns
 ```
+
+`notifications`と`personal_access_tokens`はLaravelのPolymorphic Relationshipを使用しています。このアプリでは、どちらもユーザーに紐付けて使用します。
 
 ### 複合UNIQUE制約
 
@@ -409,12 +522,41 @@ erDiagram
 - `favorites`：`user_id + book_id`
 - `review_likes`：`user_id + review_id`
 
+`reading_plans`には`user_id + book_id`の複合UNIQUE制約を設けていないため、同じユーザーが同じ書籍の読書計画を複数回作成できます。
+
 ## 基本機能と応用機能
 
-このブランチでは、要件シートに記載されたフェーズ1の基本機能を実装しています。
+このブランチでは、要件シートに記載されたフェーズ1の基本機能とフェーズ2の応用機能を実装しています。
 
-SanctumによるBearerトークン認証、Google Books API連携、高度な検索・フィルタ、マイ読書レポート、読書計画・リマインダー通知はフェーズ2の応用機能であり、現時点では未実装です。
+### 基本機能
+
+- 認証
+- 書籍・ジャンル・レビューのCRUD
+- お気に入り
+- レビューいいね
+- ランキング
+- REST API
+- 自動テスト
+
+### 応用機能
+
+- 高度な書籍検索・フィルタ
+- Google Books APIによるISBN検索
+- 読書計画
+- リマインダー通知と日次バッチ
+- 通知一覧と既読処理
+- マイ読書レポート
+- Laravel SanctumによるAPI認証
+- 所有者認可
+- PHPDocと型宣言
+- 95.1％のテストカバレッジ
+
+## 外部APIの注意事項
+
+Google Books APIの利用上限を超えた場合は、HTTP 429が返されることがあります。
+
+自動テストではLaravel HTTP Clientの`Http::fake()`を使用しているため、外部APIの利用状況に依存せず、正常取得・未検出・通信エラーを検証できます。
 
 ## 作成者
 
-岩間 奨
+- GitHub: https://github.com/07tasuku06-cloud
