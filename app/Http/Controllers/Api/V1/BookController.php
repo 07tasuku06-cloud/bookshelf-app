@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\IndexBookRequest;
 use App\Http\Requests\Api\StoreBookRequest;
 use App\Http\Requests\Api\UpdateBookRequest;
 use App\Http\Resources\BookResource;
 use App\Models\Book;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -18,36 +18,13 @@ class BookController extends Controller
     /**
      * 検索・ジャンル・ページネーション条件に応じた書籍一覧を返す。
      *
-     * @param  Request  $request  APIの検索条件
+     * @param  IndexBookRequest  $request  APIの検索条件
      * @return AnonymousResourceCollection ページネーションされた書籍一覧
      */
-    public function index(Request $request): AnonymousResourceCollection
-    {
-        $validated = $request->validate(
-            [
-                'keyword' => ['nullable', 'string', 'max:255'],
-                'genre_id' => [
-                    'nullable',
-                    'integer',
-                    'exists:genres,id',
-                ],
-                'per_page' => [
-                    'nullable',
-                    'integer',
-                    'min:1',
-                    'max:100',
-                ],
-            ],
-            [
-                'keyword.string' => 'キーワードは文字列で入力してください。',
-                'keyword.max' => 'キーワードは255文字以内で入力してください。',
-                'genre_id.integer' => 'ジャンルIDは整数で入力してください。',
-                'genre_id.exists' => '指定されたジャンルは存在しません。',
-                'per_page.integer' => '表示件数は整数で入力してください。',
-                'per_page.min' => '表示件数は1件以上で指定してください。',
-                'per_page.max' => '表示件数は100件以内で指定してください。',
-            ]
-        );
+    public function index(
+        IndexBookRequest $request
+    ): AnonymousResourceCollection {
+        $validated = $request->validated();
 
         $keyword = $validated['keyword'] ?? null;
         $genreId = $validated['genre_id'] ?? null;
