@@ -154,10 +154,12 @@ Google Books APIを利用するにはAPIキーを発行し、Git管理されな�
 | users | 5 |
 | genres | 10 |
 | books | 11 |
-| reviews | 32 |
+| reviews | 22〜44 |
 | book_genre | 16 |
 | favorites | 19 |
-| review_likes | 48 |
+| review_likes | 31〜66 |
+
+`reviews`は各書籍に2〜4件をランダムに投入するため、合計件数が変動します。`review_likes`もレビュー件数に応じて変動します。
 
 ### テストアカウント
 
@@ -375,8 +377,8 @@ GET /api/v1/books?keyword=Laravel&genre_id=3&per_page=10&page=1
 2026年9月15日時点の結果：
 
 ```text
-Tests:    135 passed (636 assertions)
-Coverage: 95.2%
+Tests:    136 passed (644 assertions)
+Coverage: 95.3%
 ```
 
 テストでは、次の機能を検証しています。
