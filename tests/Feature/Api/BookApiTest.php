@@ -104,6 +104,33 @@ class BookApiTest extends TestCase
         ]);
     }
 
+    public function test_index_rejects_invalid_search_parameters(): void
+    {
+        $response = $this->getJson(
+            '/api/v1/books?genre_id=999999&per_page=101&page=0'
+        );
+
+        $response
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors([
+                'genre_id',
+                'per_page',
+                'page',
+            ])
+            ->assertJsonPath(
+                'errors.genre_id.0',
+                '指定されたジャンルは存在しません。'
+            )
+            ->assertJsonPath(
+                'errors.per_page.0',
+                '1ページの件数は100件以下で指定してください。'
+            )
+            ->assertJsonPath(
+                'errors.page.0',
+                'ページ番号は1以上で指定してください。'
+            );
+    }
+
     public function test_show_returns_book_with_genres_and_reviews(): void
     {
         $owner = User::factory()->create();
