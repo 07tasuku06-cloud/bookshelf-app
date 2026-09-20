@@ -27,6 +27,11 @@ class ReviewLikeTest extends TestCase
 
         $response->assertRedirect(route('books.show', $book));
 
+        $response->assertSessionHas(
+            'success',
+            'レビューのいいね状態を更新しました。'
+        );
+
         $this->assertDatabaseHas('review_likes', [
             'user_id' => $user->id,
             'review_id' => $review->id,
@@ -55,6 +60,11 @@ class ReviewLikeTest extends TestCase
             ->post(route('reviews.like', $review));
 
         $response->assertRedirect(route('books.show', $book));
+
+        $response->assertSessionHas(
+            'success',
+            'レビューのいいね状態を更新しました。'
+        );
 
         $this->assertDatabaseMissing('review_likes', [
             'user_id' => $user->id,

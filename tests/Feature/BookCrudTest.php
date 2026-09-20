@@ -44,6 +44,11 @@ class BookCrudTest extends TestCase
 
         $response->assertRedirect(route('books.show', $book));
 
+        $response->assertSessionHas(
+            'success',
+            '書籍を登録しました。'
+        );
+
         $this->assertDatabaseHas('books', [
             'id' => $book->id,
             'user_id' => $user->id,
@@ -164,6 +169,11 @@ class BookCrudTest extends TestCase
             ]);
 
         $response->assertRedirect(route('books.show', $book));
+
+        $response->assertSessionHas(
+            'success',
+            '書籍を更新しました。'
+        );
 
         $this->assertDatabaseHas('books', [
             'id' => $book->id,
@@ -362,6 +372,11 @@ class BookCrudTest extends TestCase
             ->delete(route('books.destroy', $book));
 
         $response->assertRedirect(route('books.index'));
+
+        $response->assertSessionHas(
+            'success',
+            '書籍を削除しました。'
+        );
 
         $this->assertDatabaseMissing('books', [
             'id' => $book->id,

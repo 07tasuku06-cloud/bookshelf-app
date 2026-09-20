@@ -35,6 +35,10 @@ class ReviewCrudTest extends TestCase
             ]);
 
         $response->assertRedirect(route('books.show', $book));
+        $response->assertSessionHas(
+            'success',
+            'レビューを投稿しました。'
+        );
 
         $this->assertDatabaseHas('reviews', [
             'user_id' => $reviewer->id,
@@ -143,6 +147,11 @@ class ReviewCrudTest extends TestCase
 
         $response->assertRedirect(route('books.show', $book));
 
+        $response->assertSessionHas(
+            'success',
+            'レビューを更新しました。'
+        );
+
         $this->assertDatabaseHas('reviews', [
             'id' => $review->id,
             'rating' => 2,
@@ -237,6 +246,11 @@ class ReviewCrudTest extends TestCase
             ->delete(route('reviews.destroy', $review));
 
         $response->assertRedirect(route('books.show', $book));
+
+        $response->assertSessionHas(
+            'success',
+            'レビューを削除しました。'
+        );
 
         $this->assertDatabaseMissing('reviews', [
             'id' => $review->id,

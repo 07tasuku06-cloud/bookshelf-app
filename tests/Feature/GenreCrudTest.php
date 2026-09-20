@@ -82,6 +82,11 @@ class GenreCrudTest extends TestCase
             '書籍が紐付いているジャンルは削除できません。'
         );
 
+        $response->assertSessionHas(
+            'error',
+            '書籍が紐付いているジャンルは削除できません。'
+        );
+
         $this->assertDatabaseHas('genres', [
             'id' => $genre->id,
         ]);
@@ -164,6 +169,11 @@ class GenreCrudTest extends TestCase
             ]);
 
         $response->assertRedirect(route('genres.index'));
+
+        $response->assertSessionHas(
+            'success',
+            'ジャンルを登録しました。'
+        );
 
         $this->assertDatabaseHas('genres', [
             'name' => '新規ジャンル',
@@ -255,6 +265,11 @@ class GenreCrudTest extends TestCase
 
         $updateResponse->assertRedirect(route('genres.index'));
 
+        $updateResponse->assertSessionHas(
+            'success',
+            'ジャンルを更新しました。'
+        );
+
         $this->assertDatabaseHas('genres', [
             'id' => $genre->id,
             'name' => '更新後ジャンル',
@@ -322,6 +337,12 @@ class GenreCrudTest extends TestCase
             ->delete(route('genres.destroy', $genre));
 
         $response->assertRedirect(route('genres.index'));
+
+        $response->assertSessionHas(
+            'success',
+            'ジャンルを削除しました。'
+        );
+
         $response->assertSessionMissing('error');
 
         $this->assertDatabaseMissing('genres', [

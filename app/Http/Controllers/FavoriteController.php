@@ -36,7 +36,8 @@ class FavoriteController extends Controller
             ->favoriteBooks()
             ->toggle($book->id);
 
-        return back();
+        return back()->with(
+            'success', 'お気に入り状態を更新しました。'
+        );
     }
-    //
 }
