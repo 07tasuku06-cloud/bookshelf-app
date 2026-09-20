@@ -11,12 +11,19 @@ class ReviewLikeController extends Controller
      * 指定されたレビューのいいね状態を切り替える。
      *
      * @param  Review  $review  対象レビュー
-     * @return RedirectResponse 直前の画面へのリダイレクト
+     * @return RedirectResponse 書籍詳細画面へのリダイレクト
      */
     public function toggle(Review $review): RedirectResponse
     {
-        auth()->user()->likedReviews()->toggle($review->id);
+        auth()->user()
+            ->likedReviews()
+            ->toggle($review->id);
 
-        return redirect()->route('books.show', $review->book_id);
+        return redirect()
+            ->route('books.show', $review->book_id)
+            ->with(
+                'success',
+                'レビューのいいね状態を更新しました。'
+            );
     }
 }

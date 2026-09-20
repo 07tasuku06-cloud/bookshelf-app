@@ -25,6 +25,11 @@ class FavoriteTest extends TestCase
 
         $response->assertRedirect(route('books.show', $book));
 
+        $response->assertSessionHas(
+            'success',
+            'お気に入り状態を更新しました。'
+        );
+
         $this->assertDatabaseHas('favorites', [
             'user_id' => $user->id,
             'book_id' => $book->id,
@@ -53,6 +58,11 @@ class FavoriteTest extends TestCase
             ->post(route('favorites.toggle', $book));
 
         $response->assertRedirect(route('books.show', $book));
+
+        $response->assertSessionHas(
+            'success',
+            'お気に入り状態を更新しました。'
+        );
 
         $this->assertDatabaseMissing('favorites', [
             'user_id' => $user->id,

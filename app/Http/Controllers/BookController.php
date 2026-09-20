@@ -164,7 +164,9 @@ class BookController extends Controller
             }
         );
 
-        return redirect()->route('books.show', $book);
+        return redirect()
+            ->route('books.show', $book)
+            ->with('success', '書籍を登録しました。');
     }
 
     /**
@@ -227,7 +229,9 @@ class BookController extends Controller
             }
         );
 
-        return redirect()->route('books.show', $book);
+        return redirect()
+            ->route('books.show', $book)
+            ->with('success', '書籍を更新しました。');
     }
 
     /**
@@ -242,6 +246,7 @@ class BookController extends Controller
 
         $book->delete();
 
-        return redirect()->route('books.index');
+        return redirect()->route('books.index')
+            ->with('success', '書籍を削除しました。');
     }
 }

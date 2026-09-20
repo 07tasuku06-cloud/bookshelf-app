@@ -375,8 +375,8 @@ GET /api/v1/books?keyword=Laravel&genre_id=3&per_page=10&page=1
 2026年9月15日時点の結果：
 
 ```text
-Tests:    135 passed (622 assertions)
-Coverage: 95.1%
+Tests:    135 passed (636 assertions)
+Coverage: 95.2%
 ```
 
 テストでは、次の機能を検証しています。
